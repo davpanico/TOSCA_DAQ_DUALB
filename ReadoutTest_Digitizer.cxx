@@ -61,7 +61,7 @@
 #define MAXNB   1
 // NB: the following define MUST specify the ACTUAL max allowed number of board's channels
 // it is needed for consistency inside the CAENDigitizer's functions used to allocate the memory
-#define MaxNChannels 32
+#define MaxNChannels 16
 
 // The following define MUST specify the number of bits used for the energy calculation
 #define MAXNBITS 14
@@ -538,7 +538,7 @@ int main(int argc, char* argv[])
        	/* The following is for VME boards connected using A4818 with PID number p, through an V2718 CONET-VME Bridge
         in this case you must set <LikType> = CAEN_DGTZ_USB_A4818_V2718, <LinkNum_OR_A4818_PID> = p, <ConetNode> = 0 
 		and <VMEBaseAddress> = <0xXXXXXXXX> (address of the VME board) */
-        ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB_A4818_V2718, 23365, 0, 0, &handle[1]);
+//        ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB_A4818_V2718, 23365, 0, 0, &handle[1]);
 	
 	
         Params[b].IOlev = CAEN_DGTZ_IOLevel_NIM;
@@ -619,9 +619,9 @@ int main(int argc, char* argv[])
         
 
 	printf("\n ************************************************************************* \n");
-        printf(" ************ Readout Software For CAEN V1742 via A4818  ***************** \n");
+    printf(" ************ Readout Software For CAEN V1742 via A4818  ***************** \n");
 	printf(" ************                              Version: 1.01 ***************** \n");
-        printf(" ************            Authors: D. Panico, A. Di Nitto ***************** \n");
+    printf(" ************            Authors: D. Panico, A. Di Nitto ***************** \n");
 	printf(" ************************************************************************* \n");
                                 
 
@@ -632,7 +632,7 @@ int main(int argc, char* argv[])
 	int32_t PID = 23365;
         
 	
-        ret = CAEN_DGTZ_OpenDigitizer2(CAEN_DGTZ_USB_A4818,&PID,0,0,&handle[0]);     //V1742
+    ret = CAEN_DGTZ_OpenDigitizer2(CAEN_DGTZ_USB_A4818,&PID,0,0,&handle[0]);     //V1742
 	ret = CAEN_DGTZ_OpenDigitizer2(CAEN_DGTZ_USB_A4818,&PID,0,1,&handle[1]);     //V1725
 	
         if(ret != CAEN_DGTZ_Success) {
