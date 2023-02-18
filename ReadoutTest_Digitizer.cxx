@@ -686,7 +686,7 @@ int main(int argc, char* argv[])
 	ret = CAEN_DGTZ_SetGroupFastTriggerDCOffset(handle[b],15, 32768);          	/* Set the TRn input signal DC Offset */
 	ret = CAEN_DGTZ_SetGroupFastTriggerThreshold(handle[b],15, 20934);          	/* Set the TRn input signal threshold */
  
-    ret = CAEN_DGTZ_SetOutputSignalMode(handle[b],CAEN_DGTZ_FASTTRG_ACCEPTED)
+    ret = CAEN_DGTZ_SetOutputSignalMode(handle[b],CAEN_DGTZ_FASTTRG_ACCEPTED);
         
         
 	ret = CAEN_DGTZ_LoadDRS4CorrectionData(handle[b], CAEN_DGTZ_DRS4_5GHz);
