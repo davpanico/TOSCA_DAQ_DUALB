@@ -768,8 +768,8 @@ int main(int argc, char* argv[])
      /*************************************************************** Start Acquisition ********************************************************************/
     
     for(b=0; b<MAXNB; b++){
-            ret = CAEN_DGTZ_SWStartAcquisition(handle[b]);
-    
+            ret = CAEN_DGTZ_SWStartAcquisition(handle[0]);
+            ret = CAEN_DGTZ_SWStartAcquisition(handle[1]);
     
     /************************************************************** Start acquisition loop ****************************************************************/
     
@@ -834,7 +834,94 @@ int main(int argc, char* argv[])
 
 
 
+                // Clear Histograms and counters
+                for (b = 0; b < MAXNB; b++) {
+                    for (ch = 0; ch < MaxNChannels; ch++) {
+                        EHisto[b][ch] = (uint32_t *)malloc((1 << MAXNBITS) * sizeof(uint32_t));
+                        memset(EHisto[b][ch], 0, (1 << MAXNBITS) * sizeof(uint32_t));
+                        TrgCnt[b][ch] = 0;
+                        ECnt[b][ch] = 0;
+                        PrevTime[b][ch] = 0;
+                        ExtendedTT[b][ch] = 0;
+                        PurCnt[b][ch] = 0;
+                    }
+                }
+                PrevRateTime = get_time();
+                AcqRun = 0;
+                PrintInterface();
+                
+                            
+                AcqRun = 1;
+                    
+                    /* Read data from the boards */
+                    for (b = 0; b < MAXNB; b++) {
+                        /* Read data from the board */
+                        ret = CAEN_DGTZ_ReadData(handle[1], CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT, buffer, &BufferSize);
+                        if (ret) {
+                            printf("Readout Error\n");
+                            goto QuitProgram;
+                        }
+                        if (BufferSize == 0)
+                            continue;
 
+                        Nb += BufferSize;
+                        //ret = DataConsistencyCheck((uint32_t *)buffer, BufferSize/4);
+                        ret |= CAEN_DGTZ_GetDPPEvents(handle[1], buffer, BufferSize, Events, NumEvents);
+                        if (ret) {
+                            printf("Data Error: %d\n", ret);
+                            goto QuitProgram;
+                        }
+
+                        /* Analyze data */
+                        //for(b=0; b<MAXNB; b++) printf("%d now: %d\n", b, Params[b].ChannelMask);
+                        for (ch = 0; ch < MaxNChannels; ch++) {
+                            if (!(Params[b].ChannelMask & (1<<ch)))
+                                continue;
+                            
+                            /* Update Histograms */
+                            for (ev = 0; ev < NumEvents[ch]; ev++) {
+                                TrgCnt[b][ch]++;
+                                /* Time Tag */
+                                if (Events[ch][ev].TimeTag < PrevTime[b][ch])
+                                    ExtendedTT[b][ch]++;
+                                PrevTime[b][ch] = Events[ch][ev].TimeTag;
+                                /* Energy */
+                                if (Events[ch][ev].Energy > 0) {
+                                    // Fill the histograms
+                                    EHisto[b][ch][(Events[ch][ev].Energy)&BitMask]++;
+                                    ECnt[b][ch]++;
+                                } else {  /* PileUp */
+                                    PurCnt[b][ch]++;
+                                }
+                                
+                                
+                                /* Get Waveforms (only from 1st event in the buffer) */
+                                if ((Params[b].AcqMode != CAEN_DGTZ_DPP_ACQ_MODE_List) && DoSaveWave[b][ch] && (ev == 0)) {
+                                    int size;
+                                    int16_t *WaveLine;
+                                    uint8_t *DigitalWaveLine;
+                                    CAEN_DGTZ_DecodeDPPWaveforms(handle[b], &Events[ch][ev], Waveform);
+
+                                    // Use waveform data here...
+                                    size = (int)(Waveform->Ns); // Number of samples
+                                    WaveLine = Waveform->Trace1; // First trace (ANALOG_TRACE_1)
+                                    SaveWaveform(b, ch, 1, size, WaveLine);
+
+                                    WaveLine = Waveform->Trace2; // Second Trace ANALOG_TRACE_2 (if single trace mode, it is a sequence of zeroes)
+                                    SaveWaveform(b, ch, 2, size, WaveLine);
+
+                                    DigitalWaveLine = Waveform->DTrace1; // First Digital Trace (DIGITALPROBE1)
+                                    SaveDigitalProbe(b, ch, 1, size, DigitalWaveLine);
+
+                                    DigitalWaveLine = Waveform->DTrace2; // Second Digital Trace (for DPP-PHA it is ALWAYS Trigger)
+                                    SaveDigitalProbe(b, ch, 2, size, DigitalWaveLine);
+                                    DoSaveWave[b][ch] = 0;
+                                    printf("Waveforms saved to 'Waveform_<board>_<channel>_<trace>.txt'\n");
+                                    
+                                } // loop to save waves
+                            } // loop on events
+                        } // loop on channels
+                    } // loop on boards
 
 
 
@@ -976,6 +1063,8 @@ int main(int argc, char* argv[])
 			
 
 			    ret = CAEN_DGTZ_FreeEvent(handle[b],(void**) &Evt);
+                CAEN_DGTZ_FreeDPPEvents(handle[1], (void**) &Events);
+                CAEN_DGTZ_FreeDPPWaveforms(handle[1],(void**) &Waveform);
 			    //delete f1;
 					
 
@@ -1003,7 +1092,8 @@ Continue:
 QuitProgram:
 
     // Free the buffers and close the digitizers
-	ret = CAEN_DGTZ_SWStopAcquisition(handle[b]);
+	ret = CAEN_DGTZ_SWStopAcquisition(handle[0]);
+        ret = CAEN_DGTZ_SWStopAcquisition(handle[1]);
 	ret = CAEN_DGTZ_FreeReadoutBuffer(&buffer);
 	fclose(fptr);
 
@@ -1016,6 +1106,7 @@ QuitProgram:
 
     for(b=0; b<MAXNB; b++){
         ret = CAEN_DGTZ_CloseDigitizer(handle[b]);
+        ret = CAEN_DGTZ_CloseDigitizer(handle[1])
     }
     printf("\n|-----> Press ENTER to quit... \n");
     getchar();
