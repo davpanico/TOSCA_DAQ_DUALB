@@ -866,7 +866,7 @@ int main(int argc, char* argv[])
 
                         Nb += BufferSize;
                         //ret = DataConsistencyCheck((uint32_t *)buffer, BufferSize/4);
-                        ret |= CAEN_DGTZ_GetDPPEvents(handle[1], buffer, BufferSize, (void**) &Events, &NumEvents);
+                        ret |= CAEN_DGTZ_GetDPPEvents(handle[1], buffer, BufferSize, (void**) &Events, NumEvents);
                         if (ret) {
                             printf("Data Error: %d\n", ret);
                             goto QuitProgram;
