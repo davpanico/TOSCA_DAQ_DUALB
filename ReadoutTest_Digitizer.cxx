@@ -136,7 +136,7 @@ int ProgramDigitizer(int handle, DigitizerParams_t Params, CAEN_DGTZ_DPP_PHA_Par
     ret |= CAEN_DGTZ_SetAcquisitionMode(handle, CAEN_DGTZ_SW_CONTROLLED);
     
     // Set the digitizer syncronization mode
-    ret |= CAEN_DGTZ_SetRunSynchronisationMode(handle, CAEN_DGTZ_RUN_SYNC_TrgOutTrgInDaisyChain);
+    ret |= CAEN_DGTZ_SetRunSynchronizationMode(handle, CAEN_DGTZ_RUN_SYNC_TrgOutTrgInDaisyChain);
     
     // Set the number of samples for each waveform
     ret |= CAEN_DGTZ_SetRecordLength(handle, Params.RecordLength);
