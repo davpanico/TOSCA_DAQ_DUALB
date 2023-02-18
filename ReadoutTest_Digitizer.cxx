@@ -9,9 +9,6 @@
 #include <sstream>
 #include <algorithm>
 #include "cmath"
-
-
-
 #include "CAENDigitizer.h"
 #include "keyb.h"
 
@@ -136,7 +133,10 @@ int ProgramDigitizer(int handle, DigitizerParams_t Params, CAEN_DGTZ_DPP_PHA_Par
     ret |= CAEN_DGTZ_SetDPPAcquisitionMode(handle, Params.AcqMode, CAEN_DGTZ_DPP_SAVE_PARAM_EnergyAndTime);
     
     // Set the digitizer acquisition mode (CAEN_DGTZ_SW_CONTROLLED or CAEN_DGTZ_S_IN_CONTROLLED)
-    ret |= CAEN_DGTZ_SetAcquisitionMode(handle, CAEN_DGTZ_S_IN_CONTROLLED);
+    ret |= CAEN_DGTZ_SetAcquisitionMode(handle, CAEN_DGTZ_SW_CONTROLLED);
+    
+    // Set the digitizer syncronization mode
+    ret |= CAEN_DGTZ_SetRunSynchronisationMode(handle, CAEN_DGTZ_RUN_SYNC_TrgOutTrgInDaisyChain);
     
     // Set the number of samples for each waveform
     ret |= CAEN_DGTZ_SetRecordLength(handle, Params.RecordLength);
@@ -159,10 +159,7 @@ int ProgramDigitizer(int handle, DigitizerParams_t Params, CAEN_DGTZ_DPP_PHA_Par
     // Set how many events to accumulate in the board memory before being available for readout
     ret |= CAEN_DGTZ_SetDPPEventAggregation(handle, Params.EventAggr, 0);
     
-    /* Set the mode used to syncronize the acquisition between different boards.
-    In this example the sync is disabled */
-    ret |= CAEN_DGTZ_SetRunSynchronizationMode(handle, CAEN_DGTZ_RUN_SYNC_Disabled);
-    
+
     // Set the DPP specific parameters for the channels in the given channelMask
     ret |= CAEN_DGTZ_SetDPPParameters(handle, Params.ChannelMask, &DPPParams);
     
@@ -547,9 +544,9 @@ int main(int argc, char* argv[])
         \****************************/
         Params[b].AcqMode = CAEN_DGTZ_DPP_ACQ_MODE_Mixed;          // CAEN_DGTZ_DPP_ACQ_MODE_List or CAEN_DGTZ_DPP_ACQ_MODE_Oscilloscope
         Params[b].RecordLength = 2000;                              // Num of samples of the waveforms (only for Oscilloscope mode)
-        Params[b].ChannelMask = 0x01;                               // Channel enable mask
+        Params[b].ChannelMask = 0xFFFF;                             // Channel enable mask
         Params[b].EventAggr = 0;                                   // number of events in one aggregate (0=automatic)
-        Params[b].PulsePolarity = CAEN_DGTZ_PulsePolarityNegative; // Pulse Polarity (this parameter can be individual)
+        Params[b].PulsePolarity = CAEN_DGTZ_PulsePolarityPositive; // Pulse Polarity (this parameter can be individual)
 
         /****************************\
         *      DPP parameters        *
@@ -681,21 +678,25 @@ int main(int argc, char* argv[])
         /* ************** TRIGGER PARAMETERS ********************** */
 
        //ret = CAEN_DGTZ_SetGroupTriggerThreshold(handle[b],0,32768);                    /* Set selfTrigger threshold */
-       //ret = CAEN_DGTZ_SetGroupSelfTrigger(handle[b],CAEN_DGTZ_TRGMODE_ACQ_ONLY,15);   /* Set trigger on channel 0 to be ACQ_ONLY */
-      	ret = CAEN_DGTZ_SetSWTriggerMode(handle[b],CAEN_DGTZ_TRGMODE_DISABLED);         /* Set the behaviour when a SW tirgger arrives */
+//    ret = CAEN_DGTZ_SetFastTriggerMode(handle[b],CAEN_DGTZ_TRGMODE_ACQ_ONLY,15);   /* Set trigger on channel 0 to be ACQ_ONLY */
+    ret = CAEN_DGTZ_SetSWTriggerMode(handle[b],CAEN_DGTZ_TRGMODE_DISABLED);         /* Set the behaviour when a SW tirgger arrives */
 
 	ret = CAEN_DGTZ_SetFastTriggerMode(handle[b],CAEN_DGTZ_TRGMODE_ACQ_ONLY);       /* Enable the TRn as the local trigger  */
 	ret = CAEN_DGTZ_SetFastTriggerDigitizing(handle[b], CAEN_DGTZ_ENABLE);          /* Enable the TRn input signal digitization */
 	ret = CAEN_DGTZ_SetGroupFastTriggerDCOffset(handle[b],15, 32768);          	/* Set the TRn input signal DC Offset */
 	ret = CAEN_DGTZ_SetGroupFastTriggerThreshold(handle[b],15, 20934);          	/* Set the TRn input signal threshold */
-
+ 
+    ret = CAEN_DGTZ_SetOutputSignalMode(handle[b],CAEN_DGTZ_FASTTRG_ACCEPTED)
+        
+        
 	ret = CAEN_DGTZ_LoadDRS4CorrectionData(handle[b], CAEN_DGTZ_DRS4_5GHz);
 	ret = CAEN_DGTZ_EnableDRS4Correction(handle[b]);
 
-	ret = CAEN_DGTZ_SetMaxNumEventsBLT(handle[b],1000000);                              /* Set the max number of events to transfer in a sigle readout */
+	ret = CAEN_DGTZ_SetMaxNumEventsBLT(handle[b],1000);                              /* Set the max number of events to transfer in a sigle readout */
         ret = CAEN_DGTZ_SetAcquisitionMode(handle[b],CAEN_DGTZ_SW_CONTROLLED);          /* Set the acquisition mode */
 
 
+        
 	/* *************************************************************************************** */
         /* Program the V1725 digitizer (see function ProgramDigitizer)                             */
         /* *************************************************************************************** */
