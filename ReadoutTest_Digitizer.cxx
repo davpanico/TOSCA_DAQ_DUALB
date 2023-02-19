@@ -479,7 +479,7 @@ int main(int argc, char* argv[])
 	canvas2->Update();
 	#endif
 
-        //auto server = new THttpServer();
+    THttpServer* server = new THttpServer("http:8080");
 
 	
 	stringstream st;
