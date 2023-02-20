@@ -479,7 +479,7 @@ int main(int argc, char* argv[])
 	canvas2->Update();
 	#endif
 
-    THttpServer* server = new THttpServer("http:8080");
+//    THttpServer* server = new THttpServer("http:8080");
 
 	
 	stringstream st;
@@ -511,7 +511,7 @@ int main(int argc, char* argv[])
 	T->Branch("TOF_CFD1",&TOF_CFD1,"TOF_CFD1/F");
 	T->Branch("TOF_CFD2",&TOF_CFD2,"TOF_CFD2/F");
 	
-						     
+   
 
    
 
@@ -919,6 +919,7 @@ int main(int argc, char* argv[])
                                     printf("Waveforms saved to 'Waveform_<board>_<channel>_<trace>.txt'\n");
                                     
                                 } // loop to save waves
+                                
                             } // loop on events
                         } // loop on channels
                     } // loop on boards
