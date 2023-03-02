@@ -54,9 +54,9 @@
 
 
 //#define INDIVIDUAL_TRIGGER_INPUTS
-// The following define must be set to the actual number of connected boards
+// The following define must be set to the actual number of NO-DPP connected boards
 #define MAXNB   1
-// NB: the following define MUST specify the ACTUAL max allowed number of board's channels
+// NB: the following define MUST specify the ACTUAL max allowed number of DPP board's channels
 // it is needed for consistency inside the CAENDigitizer's functions used to allocate the memory
 #define MaxNChannels 16
 
@@ -156,8 +156,8 @@ int ProgramDigitizer(int handle, DigitizerParams_t Params, CAEN_DGTZ_DPP_PHA_Par
     // Set the enabled channels
     ret |= CAEN_DGTZ_SetChannelEnableMask(handle, Params.ChannelMask);
 
-    // Set how many events to accumulate in the board memory before being available for readout
-    ret |= CAEN_DGTZ_SetDPPEventAggregation(handle, Params.EventAggr, 0);
+    // Set how many events to accumulate in the board memory before being available for readout (0 for auto)
+    ret |= CAEN_DGTZ_SetDPPEventAggregation(handle, Params.EventAggr, 1000);
     
 
     // Set the DPP specific parameters for the channels in the given channelMask
@@ -885,11 +885,13 @@ int main(int argc, char* argv[])
                                 if (Events[ch][ev].TimeTag < PrevTime[b][ch])
                                     ExtendedTT[b][ch]++;
                                 PrevTime[b][ch] = Events[ch][ev].TimeTag;
+                                
                                 /* Energy */
                                 if (Events[ch][ev].Energy > 0) {
                                     // Fill the histograms
                                     EHisto[b][ch][(Events[ch][ev].Energy)&BitMask]++;
                                     ECnt[b][ch]++;
+                                    
                                 } else {  /* PileUp */
                                     PurCnt[b][ch]++;
                                 }
